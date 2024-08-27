@@ -45,5 +45,5 @@ class CommentList(BaseModel):
 
     comments: list[Comment]
     page: int
-    page_size: int
+    page_count: int
     size_per_page: int
