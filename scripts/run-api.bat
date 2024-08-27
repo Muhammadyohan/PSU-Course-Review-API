@@ -1,0 +1,1 @@
+poetry run uvicorn "psu_course_review.main:create_app" --factory --reload
