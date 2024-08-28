@@ -16,7 +16,7 @@ SIZE_PER_PAGE = 50
 
 
 @router.post("")
-async def create_reviewpost(
+async def create_review_post(
     reviewpost: models.CreatedReviewPost,
     session: Annotated[AsyncSession, Depends(models.get_session)],
 ) -> models.ReviewPost:
@@ -28,7 +28,7 @@ async def create_reviewpost(
     return models.ReviewPost.model_validate(db_reviewpost)
 
 @router.get("")
-async def read_reviewposts(
+async def read_review_posts(
     session: Annotated[AsyncSession, Depends(models.get_session)],
     page: int = 1,
 ) -> models.ReviewPostList:
@@ -55,7 +55,7 @@ async def read_reviewposts(
     )
 
 @router.get("/{reviewpost_id}")
-async def read_reviewpost(
+async def read_review_post(
     reviewpost_id: int,
     session: Annotated[AsyncSession, Depends(models.get_session)],
 ) -> models.ReviewPost:
@@ -66,7 +66,7 @@ async def read_reviewpost(
 
 
 @router.put("/{reviewpost_id}")
-async def update_reviewpost(
+async def update_review_post(
     reviewpost_id: int,
     reviewpost: models.UpdatedReviewPost,
     session: Annotated[AsyncSession, Depends(models.get_session)],
@@ -85,7 +85,7 @@ async def update_reviewpost(
     return models.ReviewPost.model_validate(db_reviewpost)
 
 @router.delete("/{reviewpost_id}")
-async def delete_reviewpost(
+async def delete_review_post(
     reviewpost_id: int,
     session: Annotated[AsyncSession, Depends(models.get_session)],
 ) -> dict:

@@ -28,7 +28,7 @@ class ReviewPost(BaseReviewPost):
 
 
 class DBReviewPost(BaseReviewPost, SQLModel, table=True):
-    __tablename__ = "reviewposts"
+    __tablename__ = "review_posts"
     id: Optional[int] = Field(default=None, primary_key=True)
 
     # Wait for Review_Post Model to write the code below
