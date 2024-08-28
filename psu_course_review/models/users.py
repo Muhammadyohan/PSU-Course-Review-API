@@ -52,7 +52,6 @@ class ChangedPassword(BaseModel):
 
 class ResetedPassword(BaseModel):
     email: EmailStr
-    citizen_id: str
 
 
 class RegisteredUser(BaseUser):
