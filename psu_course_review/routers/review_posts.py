@@ -8,6 +8,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 import math
 
 from .. import models
+from .. import deps
 
 router = APIRouter(prefix="/review_posts", tags=["review_posts"])
 
@@ -17,15 +18,29 @@ SIZE_PER_PAGE = 50
 
 @router.post("")
 async def create_review_post(
-    reviewpost: models.CreatedReviewPost,
+    review_post: models.CreatedReviewPost,
     session: Annotated[AsyncSession, Depends(models.get_session)],
+    current_user: Annotated[models.User, Depends(deps.get_current_user)],
 ) -> models.ReviewPost:
-    db_reviewpost = models.DBReviewPost.model_validate(reviewpost)
-    session.add(db_reviewpost)
-    await session.commit()
-    await session.refresh(db_reviewpost)
+    db_course = await session.get(models.DBCourse, review_post.course_id)
+    if db_course is None:
+        raise HTTPException(status_code=404, detail="Course not found")
 
-    return models.ReviewPost.model_validate(db_reviewpost)
+    db_review_post = models.DBReviewPost.model_validate(review_post)
+
+    db_review_post.author_name = current_user.first_name + " " + current_user.last_name
+    db_review_post.course_code = db_course.course_code
+    db_review_post.course_name = db_course.course_name
+
+    db_review_post.course = db_course
+    db_review_post.user = current_user
+
+    session.add(db_review_post)
+    await session.commit()
+    await session.refresh(db_review_post)
+
+    return models.ReviewPost.model_validate(db_review_post)
+
 
 @router.get("")
 async def read_review_posts(
@@ -33,10 +48,12 @@ async def read_review_posts(
     page: int = 1,
 ) -> models.ReviewPostList:
     query = (
-        select(models.DBReviewPost).offset((page - 1) * SIZE_PER_PAGE).limit(SIZE_PER_PAGE)
+        select(models.DBReviewPost)
+        .offset((page - 1) * SIZE_PER_PAGE)
+        .limit(SIZE_PER_PAGE)
     )
     result = await session.exec(query)
-    reviewposts = result.all()
+    review_posts = result.all()
 
     page_count = int(
         math.ceil(
@@ -47,53 +64,71 @@ async def read_review_posts(
 
     return models.ReviewPostList.model_validate(
         dict(
-            reviewposts=reviewposts,
+            review_posts=review_posts,
             page_count=page_count,
             page=page,
             size_per_page=SIZE_PER_PAGE,
         )
     )
 
-@router.get("/{reviewpost_id}")
+
+@router.get("/{review_post_id}")
 async def read_review_post(
-    reviewpost_id: int,
+    review_post_id: int,
     session: Annotated[AsyncSession, Depends(models.get_session)],
 ) -> models.ReviewPost:
-    db_reviewpost = await session.get(models.DBReviewPost, reviewpost_id)
-    if db_reviewpost is None:
-        raise HTTPException(status_code=404, detail="reviewpost not found")
-    return models.ReviewPost.model_validate(db_reviewpost)
+    db_review_post = await session.get(models.DBReviewPost, review_post_id)
+    if db_review_post is None:
+        raise HTTPException(status_code=404, detail="Review Post not found")
+
+    return models.ReviewPost.model_validate(db_review_post)
 
 
-@router.put("/{reviewpost_id}")
+@router.put("/{review_post_id}")
 async def update_review_post(
-    reviewpost_id: int,
-    reviewpost: models.UpdatedReviewPost,
+    review_post_id: int,
+    review_post: models.UpdatedReviewPost,
     session: Annotated[AsyncSession, Depends(models.get_session)],
+    current_user: Annotated[models.User, Depends(deps.get_current_user)],
 ) -> models.ReviewPost:
-    data = reviewpost.model_dump()
-    db_reviewpost = await session.get(models.DBReviewPost, reviewpost_id)
-    if db_reviewpost is None:
-        raise HTTPException(status_code=404, detail="ReviewPost not found")
+    db_review_post = await session.get(models.DBReviewPost, review_post_id)
+    if db_review_post is None:
+        raise HTTPException(status_code=404, detail="Review Post not found")
 
-    db_reviewpost.sqlmodel_update(data)
+    if db_review_post.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Forbidden, not your review post")
 
-    session.add(db_reviewpost)
+    review_post.author_name = db_review_post.author_name
+    review_post.course_name = db_review_post.course_name
+    review_post.course_code = db_review_post.course_code
+    review_post.course_id = db_review_post.course_id
+    review_post.user_id = db_review_post.user_id
+
+    data = review_post.model_dump()
+
+    db_review_post.sqlmodel_update(data)
+
+    session.add(db_review_post)
     await session.commit()
-    await session.refresh(db_reviewpost)
+    await session.refresh(db_review_post)
 
-    return models.ReviewPost.model_validate(db_reviewpost)
+    return models.ReviewPost.model_validate(db_review_post)
 
-@router.delete("/{reviewpost_id}")
+
+@router.delete("/{review_post_id}")
 async def delete_review_post(
-    reviewpost_id: int,
+    review_post_id: int,
     session: Annotated[AsyncSession, Depends(models.get_session)],
+    current_user: Annotated[models.User, Depends(deps.get_current_user)],
 ) -> dict:
-    db_reviewpost = await session.get(models.DBReviewPost, reviewpost_id)
-    if db_reviewpost is None:
-        raise HTTPException(status_code=404, detail="ReviewPost not found")
+    db_review_post = await session.get(models.DBReviewPost, review_post_id)
+    if db_review_post is None:
+        raise HTTPException(status_code=404, detail="Review Post not found")
 
-    await session.delete(db_reviewpost)
+    if db_review_post.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Forbidden, not your review post")
+
+    await session.delete(db_review_post)
     await session.commit()
 
-    return dict(message="ReviewPost deleted")
+    return dict(message="Review Post deleted")

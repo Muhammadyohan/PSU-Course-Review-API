@@ -22,12 +22,12 @@ async def create_comment(
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)],
 ) -> models.Comment:
-    db_comment = models.DBComment.model_validate(comment)
-
     db_review_post = await session.get(models.DBReviewPost, comment.review_post_id)
     if db_review_post is None:
         raise HTTPException(status_code=404, detail="Review post not found")
 
+    db_comment = models.DBComment.model_validate(comment)
+    
     db_comment.comment_author = current_user.first_name + " " + current_user.last_name
 
     db_comment.review_post = db_review_post
