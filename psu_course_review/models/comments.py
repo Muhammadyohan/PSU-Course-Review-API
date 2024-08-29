@@ -11,7 +11,7 @@ class BaseComment(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     comment_text: str
-    comment_author: str
+    comment_author: str | None = None
     likes_amount: int = 0
     review_post_id: int | None = 0
     user_id: int | None = 0

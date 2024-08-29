@@ -9,13 +9,13 @@ from . import users
 class BaseReviewPost(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    reviewpost_header: str
-    reviewpost_paragraph: str
+    review_post_title: str
+    review_post_text: str
     likes_amount: int = 0
-    author_name: str
+    author_name: str | None = None
     comments_amount: int = 0
-    course_code: str
-    course_name: str
+    course_code: str | None = None
+    course_name: str | None = None
     course_id: int | None = 0
     user_id: int | None = 0
 
