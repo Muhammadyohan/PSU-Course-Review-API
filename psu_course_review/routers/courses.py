@@ -86,6 +86,7 @@ async def update_course(
     if db_course.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Forbidden")
 
+    course.review_posts_amount = db_course.review_posts_amount
     course.user_id = db_course.user_id
 
     data = course.model_dump()

@@ -11,6 +11,7 @@ class BaseCourse(BaseModel):
     course_code: str
     course_name: str
     course_description: str
+    review_posts_amount: int = 0
     user_id: int | None = 0
 
 

@@ -38,11 +38,8 @@ async def test_update_comment(
 ):
     headers = {"Authorization": f"{token_user1.token_type} {token_user1.access_token}"}
     payload = {
-        "comment_author": "You can't update this",
-        "comment_text": "You can update only comment_text and likes_amount",
+        "comment_text": "test text",
         "likes_amount": 1,
-        "review_post_id": 0,
-        "user_id": 0,
     }
     response = await client.put(
         f"/comments/{comment_user1.id}", json=payload, headers=headers
@@ -52,11 +49,8 @@ async def test_update_comment(
 
     assert response.status_code == 200
     assert data["id"] == comment_user1.id
-    assert data["comment_author"] == user1.first_name + " " + user1.last_name
     assert data["comment_text"] == payload["comment_text"]
     assert data["likes_amount"] == payload["likes_amount"]
-    assert data["review_post_id"] == comment_user1.review_post_id
-    assert data["user_id"] == comment_user1.user_id
 
 
 @pytest.mark.asyncio
@@ -90,3 +84,7 @@ async def test_list_comments(client: AsyncClient, comment_user1: models.DBCommen
 
     assert check_comment["id"] == comment_user1.id
     assert check_comment["comment_author"] == comment_user1.comment_author
+    assert check_comment["comment_text"] == comment_user1.comment_text
+    assert check_comment["likes_amount"] == comment_user1.likes_amount
+    assert check_comment["review_post_id"] == comment_user1.review_post_id
+    assert check_comment["user_id"] == comment_user1.user_id

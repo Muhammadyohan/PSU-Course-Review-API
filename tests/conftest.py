@@ -71,7 +71,6 @@ async def get_session() -> models.AsyncIterator[models.AsyncSession]:
 @pytest_asyncio.fixture(name="user1")
 async def example_user1(session: models.AsyncSession) -> models.DBUser:
     password = "123456"
-    hash_password = security.get_password_hash(password)
     username = "user1"
 
     query = await session.exec(
@@ -82,14 +81,15 @@ async def example_user1(session: models.AsyncSession) -> models.DBUser:
         return user
 
     user = models.DBUser(
-        username=username,
-        hashed_password=hash_password,
         email="test@test.com",
-        telephone="0812345678",
+        username=username,
         first_name="Firstname",
         last_name="lastname",
-        disabled=False,
+        password=password,
+        last_login_date=datetime.datetime.now(tz=datetime.timezone.utc),
     )
+
+    await user.set_password(password)
 
     session.add(user)
     await session.commit()
@@ -117,25 +117,83 @@ async def oauth_token_user1(user1: models.DBUser) -> dict:
         scope="",
         expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
         expires_at=datetime.datetime.now() + access_token_expires,
-        issued_at=datetime.datetime.now(),
-        user_id=str(user.id),
+        issued_at=user.last_login_date,
+        user_id=user.id,
     )
 
 
-# @pytest_asyncio.fixture(name="review_post_user1")
-# async def example_item_user1(
-#     session: models.AsyncSession,
-#     user1: models.DBUser,
-# ) -> models.DBReviewPost:
-#     title = "This is a review post"
-#     author_name = "author_name"
-#     post_text = "This is a review post"
-#     likes_amount = 5
-#     comments_amount = 5
+@pytest_asyncio.fixture(name="course_user1")
+async def example_course_user1(
+    session: models.AsyncSession,
+    user1: models.DBUser,
+) -> models.DBCourse:
+    course_name = "This is a course"
+    course_code = "123456"
+    course_description = "This is a course"
+
+    query = await session.exec(
+        models.select(models.DBCourse)
+        .where(
+            models.DBCourse.course_code == course_code,
+            models.DBCourse.user_id == user1.id,
+        )
+        .limit(1)
+    )
+    course = query.one_or_none()
+    if course:
+        return course
+
+    course = models.DBCourse(
+        course_name=course_name,
+        course_code=course_code,
+        course_description=course_description,
+        user=user1,
+    )
+
+    session.add(course)
+    await session.commit()
+    await session.refresh(course)
+    return course
+
+
+@pytest_asyncio.fixture(name="review_post_user1")
+async def example_review_post_user1(
+    session: models.AsyncSession,
+    user1: models.DBUser,
+    course_user1: models.DBCourse,
+) -> models.DBReviewPost:
+    review_post_title = "This is a review post"
+    review_post_text = "This is a review post"
+    likes_amount = 5
+
+    query = await session.exec(
+        models.select(models.DBReviewPost)
+        .where(
+            models.DBReviewPost.review_post_title == review_post_title,
+            models.DBReviewPost.user_id == user1.id,
+        )
+        .limit(1)
+    )
+    review_post = query.one_or_none()
+    if review_post:
+        return review_post
+
+    review_post = models.DBReviewPost(
+        review_post_title=review_post_title,
+        review_post_text=review_post_text,
+        likes_amount=likes_amount,
+        user=user1,
+        course=course_user1,
+    )
+
+    session.add(review_post)
+    await session.commit()
+    await session.refresh(review_post)
+    return review_post
 
 
 @pytest_asyncio.fixture(name="comment_user1")
-async def example_item_user1(
+async def example_comment_user1(
     session: models.AsyncSession,
     user1: models.DBUser,
     review_post_user1: models.DBReviewPost,
@@ -152,11 +210,11 @@ async def example_item_user1(
         )
         .limit(1)
     )
-    item = query.one_or_none()
-    if item:
-        return item
+    comment = query.one_or_none()
+    if comment:
+        return comment
 
-    item = models.DBComment(
+    comment = models.DBComment(
         comment_text=comment_text,
         comment_author=comment_author,
         likes_amount=likes_amount,
@@ -164,7 +222,7 @@ async def example_item_user1(
         user=user1,
     )
 
-    session.add(item)
+    session.add(comment)
     await session.commit()
-    await session.refresh(item)
-    return item
+    await session.refresh(comment)
+    return comment
