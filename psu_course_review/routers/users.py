@@ -86,7 +86,7 @@ async def change_password(
     return {"message": "Password changed successfully"}
 
 
-@router.put("/{user_id}/update/{verify_password}")
+@router.put("/update/{user_id}/{verify_password}")
 async def update_user(
     session: Annotated[AsyncSession, Depends(models.get_session)],
     request: Request,
