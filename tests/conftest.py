@@ -71,7 +71,6 @@ async def get_session() -> models.AsyncIterator[models.AsyncSession]:
 @pytest_asyncio.fixture(name="user1")
 async def example_user1(session: models.AsyncSession) -> models.DBUser:
     password = "123456"
-    hash_password = security.get_password_hash(password)
     username = "user1"
 
     query = await session.exec(
@@ -82,14 +81,15 @@ async def example_user1(session: models.AsyncSession) -> models.DBUser:
         return user
 
     user = models.DBUser(
-        username=username,
-        hashed_password=hash_password,
         email="test@test.com",
-        telephone="0812345678",
+        username=username,
         first_name="Firstname",
         last_name="lastname",
-        disabled=False,
+        password=password,
+        last_login_date=datetime.datetime.now(tz=datetime.timezone.utc),
     )
+
+    await user.set_password(password)
 
     session.add(user)
     await session.commit()
@@ -117,9 +117,37 @@ async def oauth_token_user1(user1: models.DBUser) -> dict:
         scope="",
         expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
         expires_at=datetime.datetime.now() + access_token_expires,
-        issued_at=datetime.datetime.now(),
-        user_id=str(user.id),
+        issued_at=user.last_login_date,
+        user_id=user.id,
     )
+
+
+# @pytest_asyncio.fixture(name="course_user1")
+# async def example_course_user1(
+#     session: models.AsyncSession,
+#     user1: models.DBUser,
+# ) -> models.DBCourse:
+#     course_name = "This is a course"
+#     course_code = "123456"
+#     course_description = "This is a course"
+#     query = await session.exec(
+#         models.select(models.DBCourse).where(models.DBCourse.course_code == course_code).limit(1)
+#     )
+#     course = query.one_or_none()
+#     if course:
+#         return course
+#     course = models.DBCourse(
+#         course_name=course_name,
+#         course_code=course_code,
+#         course_description=course_description,
+#         course_rating=course_rating,
+#         course_rating_amount=course_rating_amount,
+#     )
+#     course.course_authors.append(user1)
+#     session.add(course)
+#     await session.commit()
+#     await session.refresh(course)
+#     return course
 
 
 # @pytest_asyncio.fixture(name="review_post_user1")

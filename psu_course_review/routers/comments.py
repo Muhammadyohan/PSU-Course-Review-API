@@ -26,8 +26,12 @@ async def create_comment(
     if db_review_post is None:
         raise HTTPException(status_code=404, detail="Review post not found")
 
+    db_review_post.comments_amount += 1
+
+    session.add(db_review_post)
+
     db_comment = models.DBComment.model_validate(comment)
-    
+
     db_comment.comment_author = current_user.first_name + " " + current_user.last_name
 
     db_comment.review_post = db_review_post
@@ -126,7 +130,13 @@ async def delete_comment(
             status_code=403, detail="Forbidden, you are not the author of this comment"
         )
 
+    db_review_post = await session.get(models.DBReviewPost, db_comment.review_post_id)
+    db_review_post.comments_amount -= 1
+
+    session.add(db_review_post)
+
     await session.delete(db_comment)
     await session.commit()
+    await session.refresh(db_review_post)
 
     return dict(message="Comment deleted")

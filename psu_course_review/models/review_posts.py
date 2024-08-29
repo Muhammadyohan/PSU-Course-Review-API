@@ -13,6 +13,7 @@ class BaseReviewPost(BaseModel):
     reviewpost_paragraph: str
     likes_amount: int = 0
     author_name: str
+    comments_amount: int = 0
     course_code: str
     course_name: str
     course_id: int | None = 0
