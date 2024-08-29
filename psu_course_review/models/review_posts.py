@@ -2,16 +2,20 @@ from pydantic import BaseModel, ConfigDict
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional
 
+from . import courses
+from . import users
+
+
 class BaseReviewPost(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     reviewpost_header: str
     reviewpost_paragraph: str
-    author_name: str
     likes_amount: int = 0
-    course_id: int | None = 0
+    author_name: str
     course_code: str
     course_name: str
+    course_id: int | None = 0
     user_id: int | None = 0
 
 
@@ -31,20 +35,17 @@ class DBReviewPost(BaseReviewPost, SQLModel, table=True):
     __tablename__ = "review_posts"
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    # Wait for Review_Post Model to write the code below
-    # review_post_id: int = Field(default=None, foreign_key="review_posts.id")
-    # review_post: review_posts.DBReviewPost = Relationship()
+    course_id: int = Field(default=None, foreign_key="courses.id")
+    course: courses.DBCourse = Relationship()
 
-
-    # Wait for User Model to write the code below
-    # user_id: int = Field(default=None, foreign_key="users.id")
-    # user: users.DBUser | None = Relationship()
+    user_id: int = Field(default=None, foreign_key="users.id")
+    user: users.DBUser | None = Relationship()
 
 
 class ReviewPostList(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    reviewposts: list[ReviewPost]
+    review_posts: list[ReviewPost]
     page: int
     page_count: int
     size_per_page: int
