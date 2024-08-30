@@ -72,6 +72,44 @@ async def read_comments(
     )
 
 
+@router.get("/review_post/{review_post_id}")
+async def read_comments_list_by_review_post_id(
+    review_post_id: int,
+    session: Annotated[AsyncSession, Depends(models.get_session)],
+    page: int = 1,
+) -> models.CommentList:
+    query = (
+        select(models.DBComment)
+        .where(models.DBComment.review_post_id == review_post_id)
+        .offset((page - 1) * SIZE_PER_PAGE)
+        .limit(SIZE_PER_PAGE)
+    )
+    result = await session.exec(query)
+    comments = result.all()
+
+    page_count = int(
+        math.ceil(
+            (
+                await session.exec(
+                    select(func.count(models.DBComment.id)).where(
+                        models.DBComment.review_post_id == review_post_id
+                    )
+                )
+            ).first()
+            / SIZE_PER_PAGE
+        )
+    )
+
+    return models.CommentList.model_validate(
+        dict(
+            comments=comments,
+            page_count=page_count,
+            page=page,
+            size_per_page=SIZE_PER_PAGE,
+        )
+    )
+
+
 @router.get("/{comment_id}")
 async def read_comment(
     comment_id: int,

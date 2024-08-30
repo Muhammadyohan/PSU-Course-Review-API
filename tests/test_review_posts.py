@@ -4,6 +4,48 @@ import pytest
 
 
 @pytest.mark.asyncio
+async def test_no_permission_create_reivew_posts(
+    client: AsyncClient,
+    user1: models.DBUser,
+    course_user1: models.DBCourse,
+):
+    payload = {
+        "review_post_title": "This is a review post",
+        "review_post_text": "This is a review post",
+        "course_id": course_user1.id,
+        "user_id": user1.id,
+    }
+    response = await client.post("/review_posts", json=payload)
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_no_permission_update_review_posts(
+    client: AsyncClient,
+    review_post_user1: models.DBReviewPost,
+):
+    payload = {
+        "review_post_title": "This is a review post",
+        "review_post_text": "This is a review post",
+        "likes_amount": 5,
+    }
+    response = await client.put(f"/review_posts/{review_post_user1.id}", json=payload)
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_no_permission_delete_review_posts(
+    client: AsyncClient,
+    review_post_user1: models.DBReviewPost,
+):
+    response = await client.delete(f"/review_posts/{review_post_user1.id}")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
 async def test_create_review_post(
     client: AsyncClient,
     course_user1: models.DBCourse,
@@ -36,10 +78,8 @@ async def test_create_review_post(
 @pytest.mark.asyncio
 async def test_update_review_post(
     client: AsyncClient,
-    course_user1: models.DBCourse,
     review_post_user1: models.DBReviewPost,
     token_user1: models.Token,
-    user1: models.DBUser,
 ):
     headers = {"Authorization": f"{token_user1.token_type} {token_user1.access_token}"}
     payload = {
@@ -101,3 +141,48 @@ async def test_list_review_posts(
     assert check_review_post["course_code"] == review_post_user1.course_code
     assert check_review_post["comments_amount"] == review_post_user1.comments_amount
     assert check_review_post["user_id"] == review_post_user1.user_id
+
+
+@pytest.mark.asyncio
+async def test_comments_amount_field_of_review_posts_increase_and_decrease(
+    client: AsyncClient,
+    token_user1: models.Token,
+    course_user1: models.DBCourse,
+):
+    headers = {"Authorization": f"{token_user1.token_type} {token_user1.access_token}"}
+    # -------------------------comments_amount field of review posts increase testing--------------------------
+    payload = {
+        "review_post_title": "This is a review post",
+        "review_post_text": "This is a review post",
+        "course_id": course_user1.id,
+        "user_id": token_user1.user_id,
+    }
+    response = await client.post("/review_posts", json=payload, headers=headers)
+    review_post_data = response.json()
+    assert response.status_code == 200
+    assert review_post_data["comments_amount"] == 0
+
+    comment_payload = {
+        "comment_text": "This is a comment",
+        "review_post_id": review_post_data["id"],
+        "user_id": token_user1.user_id,
+    }
+    response = await client.post("/comments", json=comment_payload, headers=headers)
+    comment_data = response.json()
+    assert response.status_code == 200
+
+    response = await client.get(f"/review_posts/{review_post_data['id']}")
+    review_post_data = response.json()
+    assert response.status_code == 200
+    assert review_post_data["comments_amount"] == 1
+    # ---------------------------------------------------------------------------------------------------------
+
+    # -------------------------comments_amount field of review posts decrease testing--------------------------
+    response = await client.delete(f"/comments/{comment_data['id']}", headers=headers)
+    assert response.status_code == 200
+
+    response = await client.get(f"/review_posts/{review_post_data['id']}")
+    review_post_data = response.json()
+    assert response.status_code == 200
+    assert review_post_data["comments_amount"] == 0
+    # ---------------------------------------------------------------------------------------------------------
