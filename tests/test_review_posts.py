@@ -100,6 +100,25 @@ async def test_update_review_post(
 
 
 @pytest.mark.asyncio
+async def test_update_other_user_review_post(
+    client: AsyncClient,
+    review_post_user1: models.DBReviewPost,
+    token_user2: models.Token,
+):
+    headers = {"Authorization": f"{token_user2.token_type} {token_user2.access_token}"}
+    payload = {
+        "review_post_title": "This is a test review post",
+        "review_post_text": "This is a test review post",
+        "likes_amount": 5,
+    }
+    response = await client.put(
+        f"/review_posts/{review_post_user1.id}", json=payload, headers=headers
+    )
+
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
 async def test_delete_review_post(
     client: AsyncClient,
     review_post_user1: models.DBReviewPost,
@@ -113,6 +132,20 @@ async def test_delete_review_post(
 
     assert response.status_code == 200
     assert response.json() == {"message": "Review Post deleted"}
+
+
+@pytest.mark.asyncio
+async def test_delete_other_user_review_post(
+    client: AsyncClient,
+    review_post_user1: models.DBReviewPost,
+    token_user2: models.Token,
+):
+    headers = {"Authorization": f"{token_user2.token_type} {token_user2.access_token}"}
+    response = await client.delete(
+        f"/review_posts/{review_post_user1.id}", headers=headers
+    )
+
+    assert response.status_code == 403
 
 
 @pytest.mark.asyncio

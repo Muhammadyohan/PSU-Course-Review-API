@@ -4,6 +4,46 @@ import pytest
 
 
 @pytest.mark.asyncio
+async def test_no_permission_create_comments(
+    client: AsyncClient,
+    user1: models.DBUser,
+    review_post_user1: models.DBReviewPost,
+):
+    payload = {
+        "comment_text": "This is a comment",
+        "review_post_id": review_post_user1.id,
+        "user_id": user1.id,
+    }
+    response = await client.post("/comments", json=payload)
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_no_permission_update_comments(
+    client: AsyncClient,
+    comment_user1: models.DBComment,
+):
+    payload = {
+        "comment_text": "This is a comment",
+        "likes_amount": 5,
+    }
+    response = await client.put(f"/comments/{comment_user1.id}", json=payload)
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_no_permission_delete_comments(
+    client: AsyncClient,
+    comment_user1: models.DBComment,
+):
+    response = await client.delete(f"/comments/{comment_user1.id}")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
 async def test_create_comment(
     client: AsyncClient,
     review_post_user1: models.DBReviewPost,
@@ -54,6 +94,24 @@ async def test_update_comment(
 
 
 @pytest.mark.asyncio
+async def test_update_other_user_comment(
+    client: AsyncClient,
+    comment_user1: models.DBComment,
+    token_user2: models.Token,
+):
+    headers = {"Authorization": f"{token_user2.token_type} {token_user2.access_token}"}
+    payload = {
+        "comment_text": "test text",
+        "likes_amount": 1,
+    }
+    response = await client.put(
+        f"/comments/{comment_user1.id}", json=payload, headers=headers
+    )
+
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
 async def test_delete_comment(
     client: AsyncClient,
     comment_user1: models.DBComment,
@@ -65,6 +123,19 @@ async def test_delete_comment(
 
     assert response.status_code == 200
     assert response.json()["message"] == "Comment deleted"
+
+
+@pytest.mark.asyncio
+async def test_delete_other_user_comment(
+    client: AsyncClient,
+    comment_user1: models.DBComment,
+    token_user2: models.Token,
+):
+    headers = {"Authorization": f"{token_user2.token_type} {token_user2.access_token}"}
+
+    response = await client.delete(f"/comments/{comment_user1.id}", headers=headers)
+
+    assert response.status_code == 403
 
 
 @pytest.mark.asyncio
