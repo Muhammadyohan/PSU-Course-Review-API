@@ -97,6 +97,35 @@ async def example_user1(session: models.AsyncSession) -> models.DBUser:
     return user
 
 
+@pytest_asyncio.fixture(name="user2")
+async def example_user2(session: models.AsyncSession) -> models.DBUser:
+    password = "123456"
+    username = "user2"
+
+    query = await session.exec(
+        models.select(models.DBUser).where(models.DBUser.username == username).limit(1)
+    )
+    user = query.one_or_none()
+    if user:
+        return user
+
+    user = models.DBUser(
+        email="test2@test.com",
+        username=username,
+        first_name="Firstname",
+        last_name="lastname",
+        password=password,
+        last_login_date=datetime.datetime.now(tz=datetime.timezone.utc),
+    )
+
+    await user.set_password(password)
+
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    return user
+
+
 @pytest_asyncio.fixture(name="token_user1")
 async def oauth_token_user1(user1: models.DBUser) -> dict:
     settings = SettingsTesting()
@@ -104,6 +133,31 @@ async def oauth_token_user1(user1: models.DBUser) -> dict:
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )
     user = user1
+    return models.Token(
+        access_token=security.create_access_token(
+            data={"sub": user.id},
+            expires_delta=access_token_expires,
+        ),
+        refresh_token=security.create_refresh_token(
+            data={"sub": user.id},
+            expires_delta=access_token_expires,
+        ),
+        token_type="Bearer",
+        scope="",
+        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
+        expires_at=datetime.datetime.now() + access_token_expires,
+        issued_at=user.last_login_date,
+        user_id=user.id,
+    )
+
+
+@pytest_asyncio.fixture(name="token_user2")
+async def oauth_token_user2(user2: models.DBUser) -> dict:
+    settings = SettingsTesting()
+    access_token_expires = datetime.timedelta(
+        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+    user = user2
     return models.Token(
         access_token=security.create_access_token(
             data={"sub": user.id},

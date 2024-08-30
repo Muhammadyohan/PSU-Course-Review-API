@@ -77,6 +77,44 @@ async def read_review_posts(
     )
 
 
+@router.get("/course/{course_id}")
+async def read_review_posts_list_by_course(
+    course_id: int,
+    session: Annotated[AsyncSession, Depends(models.get_session)],
+    page: int = 1,
+) -> models.ReviewPostList:
+    query = (
+        select(models.DBReviewPost)
+        .where(models.DBReviewPost.course_id == course_id)
+        .offset((page - 1) * SIZE_PER_PAGE)
+        .limit(SIZE_PER_PAGE)
+    )
+    result = await session.exec(query)
+    review_posts = result.all()
+
+    page_count = int(
+        math.ceil(
+            (
+                await session.exec(
+                    select(func.count(models.DBReviewPost.id)).where(
+                        models.DBReviewPost.course_id == course_id
+                    )
+                )
+            ).first()
+            / SIZE_PER_PAGE
+        )
+    )
+
+    return models.ReviewPostList.model_validate(
+        dict(
+            review_posts=review_posts,
+            page_count=page_count,
+            page=page,
+            size_per_page=SIZE_PER_PAGE,
+        )
+    )
+
+
 @router.get("/{review_post_id}")
 async def read_review_post(
     review_post_id: int,
