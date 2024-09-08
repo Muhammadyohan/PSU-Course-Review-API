@@ -4,6 +4,8 @@ from sqlmodel import select
 
 from typing import Annotated
 
+import datetime
+
 from .. import deps
 from .. import models
 
@@ -54,6 +56,7 @@ async def get_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Not found this user",
         )
+
     return user
 
 
@@ -95,7 +98,6 @@ async def update_user(
     user_update: models.UpdatedUser,
     current_user: models.User = Depends(deps.get_current_user),
 ) -> models.User:
-
     db_user = await session.get(models.DBUser, user_id)
 
     if not db_user:
@@ -110,6 +112,7 @@ async def update_user(
             detail="Incorrect password",
         )
 
+    db_user.updated_date = datetime.datetime.now()
     db_user.sqlmodel_update(user_update)
     session.add(db_user)
     await session.commit()

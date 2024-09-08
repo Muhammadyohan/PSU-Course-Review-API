@@ -61,6 +61,7 @@ async def authentication(
     access_token_expires = datetime.timedelta(
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )
+
     return models.Token(
         access_token=security.create_access_token(
             data={"sub": user.id},

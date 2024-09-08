@@ -74,7 +74,6 @@ async def test_update_comment(
     client: AsyncClient,
     comment_user1: models.DBComment,
     token_user1: models.Token,
-    user1: models.DBUser,
 ):
     headers = {"Authorization": f"{token_user1.token_type} {token_user1.access_token}"}
     payload = {
