@@ -143,9 +143,6 @@ async def update_review_post(
 
     review_post.author_name = db_review_post.author_name
     review_post.comments_amount = db_review_post.comments_amount
-    review_post.course_name = db_review_post.course_name
-    review_post.course_code = db_review_post.course_code
-    review_post.course_id = db_review_post.course_id
     review_post.user_id = db_review_post.user_id
 
     data = review_post.model_dump()
@@ -172,13 +169,7 @@ async def delete_review_post(
     if db_review_post.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Forbidden, not your review post")
 
-    db_course = await session.get(models.DBCourse, db_review_post.course_id)
-    db_course.review_posts_amount -= 1
-
-    session.add(db_course)
-
     await session.delete(db_review_post)
     await session.commit()
-    await session.refresh(db_course)
 
     return dict(message="Review Post deleted")

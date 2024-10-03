@@ -13,12 +13,14 @@ from . import comments
 # from . import courses
 from . import review_posts
 from . import users
+from . import events
 
 from .comments import *
 
 # from .courses import *
 from .review_posts import *
 from .users import *
+from .events import *
 
 
 connect_args = {}
