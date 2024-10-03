@@ -9,11 +9,13 @@ from sqlalchemy.orm import sessionmaker
 
 
 from . import comments
+
 # from . import courses
 from . import review_posts
 from . import users
 
 from .comments import *
+
 # from .courses import *
 from .review_posts import *
 from .users import *

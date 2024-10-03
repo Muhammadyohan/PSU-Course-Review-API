@@ -31,8 +31,8 @@
 #     __tablename__ = "courses"
 #     id: Optional[int] = Field(default=None, primary_key=True)
 
-#     user_id: int = Field(default=None, foreign_key="users.id")
-#     user: users.DBUser | None = Relationship()
+#     # user_id: int = Field(default=None, foreign_key="users.id")
+#     # user: users.DBUser | None = Relationship(cascade_delete=True)
 
 
 # class CourseList(BaseModel):

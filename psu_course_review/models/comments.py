@@ -37,7 +37,7 @@ class DBComment(BaseComment, SQLModel, table=True):
     review_post: review_posts.DBReviewPost = Relationship()
 
     user_id: int = Field(default=None, foreign_key="users.id")
-    user: users.DBUser | None = Relationship()
+    user: users.DBUser | None = Relationship(cascade_delete=True)
 
 
 class CommentList(BaseModel):
