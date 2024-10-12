@@ -84,13 +84,13 @@ async def update_event(
     if db_event is None:
         raise HTTPException(status_code=404, detail="Event not found")
 
-    if db_event.user_id != current_user.user_id:
+    if db_event.user_id != current_user.id:
         raise HTTPException(
             status_code=403, detail="You are not the owner of this event"
         )
 
     event.author_name = db_event.author_name
-    event_user_id = db_event.user_id
+    event.user_id = db_event.user_id
 
     data = event.model_dump()
 

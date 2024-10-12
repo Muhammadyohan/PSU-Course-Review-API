@@ -22,26 +22,13 @@ async def create_review_post(
     session: Annotated[AsyncSession, Depends(models.get_session)],
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
 ) -> models.ReviewPost:
-    # db_course = await session.get(models.DBCourse, review_post.course_id)
-    # if db_course is None:
-    #     raise HTTPException(status_code=404, detail="Course not found")
-
-    # db_course.review_posts_amount += 1
-
-    # session.add(db_course)
-
     db_review_post = models.DBReviewPost.model_validate(review_post)
 
     db_review_post.author_name = current_user.first_name + " " + current_user.last_name
-    # db_review_post.course_code = db_course.course_code
-    # db_review_post.course_name = db_course.course_name
-
-    # db_review_post.course = db_course
     db_review_post.user = current_user
 
     session.add(db_review_post)
     await session.commit()
-    # await session.refresh(db_course)
     await session.refresh(db_review_post)
 
     return models.ReviewPost.model_validate(db_review_post)
@@ -75,44 +62,6 @@ async def read_review_posts(
             size_per_page=SIZE_PER_PAGE,
         )
     )
-
-
-# @router.get("/course/{course_id}")
-# async def read_review_posts_list_by_course(
-#     course_id: int,
-#     session: Annotated[AsyncSession, Depends(models.get_session)],
-#     page: int = 1,
-# ) -> models.ReviewPostList:
-#     query = (
-#         select(models.DBReviewPost)
-#         .where(models.DBReviewPost.course_id == course_id)
-#         .offset((page - 1) * SIZE_PER_PAGE)
-#         .limit(SIZE_PER_PAGE)
-#     )
-#     result = await session.exec(query)
-#     review_posts = result.all()
-
-#     page_count = int(
-#         math.ceil(
-#             (
-#                 await session.exec(
-#                     select(func.count(models.DBReviewPost.id)).where(
-#                         models.DBReviewPost.course_id == course_id
-#                     )
-#                 )
-#             ).first()
-#             / SIZE_PER_PAGE
-#         )
-#     )
-
-#     return models.ReviewPostList.model_validate(
-#         dict(
-#             review_posts=review_posts,
-#             page_count=page_count,
-#             page=page,
-#             size_per_page=SIZE_PER_PAGE,
-#         )
-#     )
 
 
 @router.get("/{review_post_id}")

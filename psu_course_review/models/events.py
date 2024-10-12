@@ -12,6 +12,7 @@ class BaseEvent(BaseModel):
     event_title: str
     event_description: str
     event_date: str
+    category: str
     likes_amount: int = 0
     author_name: str | None = None
     user_id: int | None = 0
@@ -34,7 +35,7 @@ class DBEvent(BaseEvent, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     user_id: int = Field(default=None, foreign_key="users.id")
-    user: users.DBUser | None = Relationship(cascade_delete=True)
+    user: users.DBUser | None = Relationship()
 
 
 class EventList(BaseModel):

@@ -2,7 +2,6 @@ from pydantic import BaseModel, ConfigDict
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional
 
-from . import courses
 from . import users
 
 
@@ -11,7 +10,7 @@ class BaseReviewPost(BaseModel):
 
     review_post_title: str
     review_post_text: str
-    course_code: str 
+    course_code: str
     course_name: str
     likes_amount: int = 0
     author_name: str | None = None
@@ -35,11 +34,8 @@ class DBReviewPost(BaseReviewPost, SQLModel, table=True):
     __tablename__ = "review_posts"
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    # course_id: int = Field(default=None, foreign_key="courses.id")
-    # course: courses.DBCourse = Relationship(cascade_delete=True)
-
     user_id: int = Field(default=None, foreign_key="users.id")
-    user: users.DBUser | None = Relationship(cascade_delete=True)
+    user: users.DBUser | None = Relationship()
 
 
 class ReviewPostList(BaseModel):
