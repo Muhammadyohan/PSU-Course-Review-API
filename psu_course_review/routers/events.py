@@ -61,6 +61,38 @@ async def read_events(
     )
 
 
+@router.get("/my")
+async def read_my_events(
+    session: Annotated[AsyncSession, Depends(models.get_session)],
+    current_user: Annotated[models.User, Depends(deps.get_current_user)],
+    page: int = 1,
+) -> models.EventList:
+    query = (
+        select(models.DBEvent)
+        .where(models.DBEvent.user_id == current_user.id)
+        .offset((page - 1) * SIZE_PER_PAGE)
+        .limit(SIZE_PER_PAGE)
+    )
+    result = await session.exec(query)
+    events = result.all()
+
+    page_count = int(
+        math.ceil(
+            (await session.exec(select(func.count(models.DBEvent.id)))).first()
+            / SIZE_PER_PAGE
+        )
+    )
+
+    return models.EventList.model_validate(
+        dict(
+            events=events,
+            page_count=page_count,
+            page=page,
+            size_per_page=SIZE_PER_PAGE,
+        )
+    )
+
+
 @router.get("/{event_id}")
 async def read_event(
     event_id: int,
