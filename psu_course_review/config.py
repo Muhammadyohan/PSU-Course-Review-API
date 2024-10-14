@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     SQLDB_URL: str
     SECRET_KEY: str
 
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 5 * 60  # 5 minutes
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30 * 60  # 30 minutes
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 7 * 24 * 60  # 7 days
 
     model_config = SettingsConfigDict(

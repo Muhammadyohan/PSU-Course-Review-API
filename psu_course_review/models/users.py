@@ -1,8 +1,9 @@
 import datetime
+from typing import List
 
 import pydantic
 from pydantic import BaseModel, EmailStr, ConfigDict
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Column, JSON
 
 # from passlib.context import CryptContext
 
@@ -52,7 +53,6 @@ class ChangedPassword(BaseModel):
 
 class ResetedPassword(BaseModel):
     email: EmailStr
-    citizen_id: str
 
 
 class RegisteredUser(BaseUser):
@@ -88,6 +88,7 @@ class DBUser(BaseUser, SQLModel, table=True):
     register_date: datetime.datetime = Field(default_factory=datetime.datetime.now)
     updated_date: datetime.datetime = Field(default_factory=datetime.datetime.now)
     last_login_date: datetime.datetime | None = Field(default=None)
+    roles: List[str] = Field(sa_column=Column(JSON), default=["user"])
 
     async def has_roles(self, roles):
         for role in roles:

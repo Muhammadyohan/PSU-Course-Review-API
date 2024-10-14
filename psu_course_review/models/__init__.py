@@ -9,14 +9,14 @@ from sqlalchemy.orm import sessionmaker
 
 
 from . import comments
-from . import courses
 from . import review_posts
 from . import users
+from . import events
 
 from .comments import *
-from .courses import *
 from .review_posts import *
 from .users import *
+from .events import *
 
 
 connect_args = {}
@@ -29,7 +29,7 @@ def init_db(settings):
 
     engine = create_async_engine(
         settings.SQLDB_URL,
-        echo=True,
+        # echo=True,
         future=True,
         connect_args=connect_args,
     )

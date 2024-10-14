@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status ,Path ,Query
+from fastapi import Depends, HTTPException, status, Path, Query
 from fastapi.security import OAuth2PasswordBearer
 
 import typing
@@ -14,15 +14,16 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
 settings = config.get_settings()
 
+
 async def get_current_user(
-        token: typing.Annotated[str, Depends(oauth2_scheme)],
+    token: typing.Annotated[str, Depends(oauth2_scheme)],
     session: typing.Annotated[models.AsyncSession, Depends(models.get_session)],
 ) -> models.User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
-)
+    )
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
@@ -53,6 +54,7 @@ async def get_current_active_user(
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
+
 async def get_current_active_superuser(
     current_user: typing.Annotated[models.User, Depends(get_current_user)]
 ) -> models.User:
@@ -61,6 +63,7 @@ async def get_current_active_superuser(
             status_code=400, detail="The user doesn't have enough privileges"
         )
     return current_user
+
 
 class RoleChecker:
     def __init__(self, *allowed_roles: list[str]):

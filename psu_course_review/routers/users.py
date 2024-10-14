@@ -4,6 +4,8 @@ from sqlmodel import select
 
 from typing import Annotated
 
+import datetime
+
 from .. import deps
 from .. import models
 
@@ -54,6 +56,7 @@ async def get_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Not found this user",
         )
+
     return user
 
 
@@ -86,7 +89,7 @@ async def change_password(
     return {"message": "Password changed successfully"}
 
 
-@router.put("/{user_id}/update/{verify_password}")
+@router.put("/update/{user_id}/{verify_password}")
 async def update_user(
     session: Annotated[AsyncSession, Depends(models.get_session)],
     request: Request,
@@ -95,7 +98,6 @@ async def update_user(
     user_update: models.UpdatedUser,
     current_user: models.User = Depends(deps.get_current_user),
 ) -> models.User:
-
     db_user = await session.get(models.DBUser, user_id)
 
     if not db_user:
@@ -104,12 +106,13 @@ async def update_user(
             detail="Not found this user",
         )
 
-    if not db_user.verify_password(verify_password):
+    if not await db_user.verify_password(verify_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect password",
         )
 
+    db_user.updated_date = datetime.datetime.now()
     db_user.sqlmodel_update(user_update)
     session.add(db_user)
     await session.commit()
