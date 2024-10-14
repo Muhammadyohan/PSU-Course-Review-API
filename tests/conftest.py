@@ -175,49 +175,15 @@ async def oauth_token_user2(user2: models.DBUser) -> dict:
         user_id=user.id,
     )
 
-
-@pytest_asyncio.fixture(name="course_user1")
-async def example_course_user1(
-    session: models.AsyncSession,
-    user1: models.DBUser,
-) -> models.DBCourse:
-    course_name = "This is a course"
-    course_code = "123456"
-    course_description = "This is a course"
-
-    query = await session.exec(
-        models.select(models.DBCourse)
-        .where(
-            models.DBCourse.course_code == course_code,
-            models.DBCourse.user_id == user1.id,
-        )
-        .limit(1)
-    )
-    course = query.one_or_none()
-    if course:
-        return course
-
-    course = models.DBCourse(
-        course_name=course_name,
-        course_code=course_code,
-        course_description=course_description,
-        user=user1,
-    )
-
-    session.add(course)
-    await session.commit()
-    await session.refresh(course)
-    return course
-
-
 @pytest_asyncio.fixture(name="review_post_user1")
 async def example_review_post_user1(
     session: models.AsyncSession,
     user1: models.DBUser,
-    course_user1: models.DBCourse,
 ) -> models.DBReviewPost:
     review_post_title = "This is a review post"
     review_post_text = "This is a review post"
+    course_code = "321-123"
+    course_name = "test course"
     likes_amount = 5
 
     query = await session.exec(
@@ -235,9 +201,10 @@ async def example_review_post_user1(
     review_post = models.DBReviewPost(
         review_post_title=review_post_title,
         review_post_text=review_post_text,
+        course_code=course_code,
+        course_name=course_name,
         likes_amount=likes_amount,
         user=user1,
-        course=course_user1,
     )
 
     session.add(review_post)
