@@ -11,10 +11,11 @@ from . import models
 
 from . import routers
 
-import asyncio
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Create tables during startup
+    await models.create_table()
     yield
     if models.engine is not None:
         # Close the DB connection
@@ -28,6 +29,5 @@ def create_app(settings=None):
     app = FastAPI(lifespan=lifespan)
 
     models.init_db(settings)
-    asyncio.run(models.create_table())
     routers.init_router(app)
     return app
