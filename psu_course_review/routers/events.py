@@ -145,7 +145,7 @@ async def delete_event(
     if db_event is None:
         raise HTTPException(status_code=404, detail="Event not found")
 
-    if db_event.user_id == current_user.id:
+    if db_event.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="You are the owner of this event")
 
     await session.delete(db_event)

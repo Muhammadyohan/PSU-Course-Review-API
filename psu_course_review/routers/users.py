@@ -106,7 +106,7 @@ async def update_user(
             detail="Not found this user",
         )
 
-    if not db_user.verify_password(verify_password):
+    if not await db_user.verify_password(verify_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect password",
