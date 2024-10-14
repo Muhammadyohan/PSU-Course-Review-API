@@ -71,7 +71,7 @@ class RoleChecker:
 
     def __call__(
         self,
-        user: typing.Annotated[models.users, Depends(get_current_active_user)],
+        user: typing.Annotated[models.User, Depends(get_current_active_user)],
     ):
         for role in user.roles:
             if role in self.allowed_roles:
