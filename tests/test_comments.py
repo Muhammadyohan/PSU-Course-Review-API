@@ -4,7 +4,7 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_no_permission_create_comments(
+async def test_no_permission_create_comment(
     client: AsyncClient,
     user1: models.DBUser,
     review_post_user1: models.DBReviewPost,
@@ -20,7 +20,7 @@ async def test_no_permission_create_comments(
 
 
 @pytest.mark.asyncio
-async def test_no_permission_update_comments(
+async def test_no_permission_update_comment(
     client: AsyncClient,
     comment_user1: models.DBComment,
 ):
@@ -34,7 +34,7 @@ async def test_no_permission_update_comments(
 
 
 @pytest.mark.asyncio
-async def test_no_permission_delete_comments(
+async def test_no_permission_delete_comment(
     client: AsyncClient,
     comment_user1: models.DBComment,
 ):

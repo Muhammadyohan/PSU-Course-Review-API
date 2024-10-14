@@ -4,7 +4,7 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_no_permission_create_reivew_posts(
+async def test_no_permission_create_reivew_post(
     client: AsyncClient,
     user1: models.DBUser,
 ):
@@ -21,7 +21,7 @@ async def test_no_permission_create_reivew_posts(
 
 
 @pytest.mark.asyncio
-async def test_no_permission_update_review_posts(
+async def test_no_permission_update_review_post(
     client: AsyncClient,
     review_post_user1: models.DBReviewPost,
 ):
@@ -38,7 +38,7 @@ async def test_no_permission_update_review_posts(
 
 
 @pytest.mark.asyncio
-async def test_no_permission_delete_review_posts(
+async def test_no_permission_delete_review_post(
     client: AsyncClient,
     review_post_user1: models.DBReviewPost,
 ):

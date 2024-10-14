@@ -175,6 +175,44 @@ async def oauth_token_user2(user2: models.DBUser) -> dict:
         user_id=user.id,
     )
 
+
+@pytest_asyncio.fixture(name="event_user1")
+async def example_event_user1(
+    session: models.AsyncSession, user1: models.DBUser
+) -> models.DBEvent:
+    event_title = "This is a event"
+    event_description = "This is a description"
+    event_date = "14 Oct 2024"
+    category = "Education"
+    likes_amount = 7
+
+    query = await session.exec(
+        models.select(models.DBEvent)
+        .where(
+            models.DBEvent.event_title == event_title,
+            models.DBEvent.user_id == user1.id,
+        )
+        .limit(1)
+    )
+    event = query.one_or_none()
+    if event:
+        return event
+
+    event = models.DBEvent(
+        event_title=event_title,
+        event_description=event_description,
+        event_date=event_date,
+        category=category,
+        likes_amount=likes_amount,
+        user=user1,
+    )
+
+    session.add(event)
+    await session.commit()
+    await session.refresh(event)
+    return event
+
+
 @pytest_asyncio.fixture(name="review_post_user1")
 async def example_review_post_user1(
     session: models.AsyncSession,

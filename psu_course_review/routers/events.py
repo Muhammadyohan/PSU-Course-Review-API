@@ -111,7 +111,7 @@ async def update_event(
     event: models.UpdatedEvent,
     session: Annotated[AsyncSession, Depends(models.get_session)],
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
-) -> models.UpdatedEvent:
+) -> models.Event:
     db_event = await session.get(models.DBEvent, event_id)
     if db_event is None:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -132,7 +132,7 @@ async def update_event(
     await session.commit()
     await session.refresh(db_event)
 
-    return models.UpdatedEvent.model_validate(db_event)
+    return models.Event.model_validate(db_event)
 
 
 @router.delete("/{event_id}")
