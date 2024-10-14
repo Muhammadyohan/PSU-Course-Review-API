@@ -76,7 +76,7 @@ async def change_password(
             detail="Not found this user",
         )
 
-    if not user.verify_password(password_update.current_password):
+    if not await user.verify_password(password_update.current_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect password",
