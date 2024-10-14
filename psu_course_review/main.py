@@ -11,6 +11,7 @@ from . import models
 
 from . import routers
 
+import asyncio
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -20,13 +21,13 @@ async def lifespan(app: FastAPI):
         await models.close_session()
 
 
-async def create_app(settings=None):
+def create_app(settings=None):
     if not settings:
         settings = config.get_settings()
 
     app = FastAPI(lifespan=lifespan)
 
     models.init_db(settings)
-    await models.create_table()
+    asyncio.run(models.create_table())
     routers.init_router(app)
     return app
