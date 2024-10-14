@@ -29,7 +29,7 @@ def init_db(settings):
 
     engine = create_async_engine(
         settings.SQLDB_URL,
-        # echo=True,
+        echo=True,
         future=True,
         connect_args=connect_args,
     )
@@ -38,6 +38,10 @@ def init_db(settings):
 async def recreate_table():
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.drop_all)
+        await conn.run_sync(SQLModel.metadata.create_all)
+
+async def create_table():
+    async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
 
 
